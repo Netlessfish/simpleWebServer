@@ -21,6 +21,8 @@
 #include "locker.h"
 #include <sys/uio.h>
 
+#include "lst_timer.h"
+
 class http_conn
 {
 public:
@@ -66,6 +68,7 @@ public:
     void close_conn();  // 关闭连接
     bool read();// 非阻塞的读
     bool write();// 非阻塞的写
+    int getSockfd(){ return m_sockfd;};//返回当前http连接的sockfd地址
 private:
     void init();    // 初始化连接其余的数据
     HTTP_CODE process_read();    // 解析HTTP请求
@@ -94,6 +97,7 @@ private:
 public:
     static int m_epollfd;       // 所有socket上的事件都被注册到同一个epoll内核事件中，所以设置成静态的
     static int m_user_count;    // 统计用户的数量
+    util_timer* timer;          // 定时器
 
 private:
     int m_sockfd;                           // 该HTTP连接的socket和对方的socket地址
@@ -120,6 +124,8 @@ private:
     struct stat m_file_stat;                // 目标文件的状态。通过它我们可以判断文件是否存在、是否为目录、是否可读，并获取文件大小等信息
     struct iovec m_iv[2];                   // 我们将采用writev来执行写操作，所以定义下面两个成员，其中m_iv_count表示被写内存块的数量。
     int m_iv_count;
+
+   
 };
 
 #endif

@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <time.h>
 #include <arpa/inet.h>
+
+#include "http_conn.h"
 /*
 优化：
 1、如果客户端不主动关闭或者请求没有错误的话，服务器是不会关闭连接的
@@ -11,10 +13,10 @@
    因为整个可以用的文件描述符数量是有限的，当所有的文件描述都用完，将无法连接新的客户端
 */
 
-#define BUFFER_SIZE 64 //读缓冲的大小
-class util_timer;   // 前向声明
+#define BUFFER_SIZE 2048 //读缓冲的大小
+class http_conn;   // 前向声明
 
-// 用户数据结构
+/*// 用户数据结构
 struct client_data
 {
     sockaddr_in address;    // 客户端socket地址
@@ -22,6 +24,7 @@ struct client_data
     char buf[ BUFFER_SIZE ];    // 读缓存
     util_timer* timer;          // 定时器
 };
+*/
 
 // 定时器类
 class util_timer {
@@ -30,8 +33,8 @@ public:
 
 public:
    time_t expire;   // 任务超时时间，这里使用绝对时间
-   void (*cb_func)( client_data* ); // 任务回调函数，回调函数处理的客户数据，由定时器的执行者传递给回调函数
-   client_data* user_data; 
+   void (*cb_func)( http_conn* ,int epollfd); // 任务回调函数，回调函数处理的客户数据，由定时器的执行者传递给回调函数
+   http_conn* user_data; 
    util_timer* prev;    // 指向前一个定时器
    util_timer* next;    // 指向后一个定时器
 };
@@ -132,7 +135,7 @@ public:
 
     /* SIGALARM 信号每次被触发就在其信号处理函数中执行一次 tick() 函数，以处理链表上到期任务。*/
     //寻找超时结点
-    void tick() {
+    void tick(int epollfd) {
         if( !head ) {
             return;
         }
@@ -149,7 +152,7 @@ public:
 
             //程序执行到这里说明超时了
             // 调用定时器的回调函数，以执行定时任务
-            tmp->cb_func( tmp->user_data );
+            tmp->cb_func( tmp->user_data, epollfd);
             // 执行完定时器中的定时任务之后，就将它从链表中删除，并重置链表头节点
             head = tmp->next;
             if( head ) {
