@@ -57,9 +57,9 @@ private:
 //成员函数具体实现
 template<typename T>
 threadpool<T>::threadpool(int thread_number, int max_request)://：冒号后面可以对成员进程初始化
-    m_thread_number(threadnumber), m_max_requests(max_request), m_stop(false), m_threads(NULL){
+    m_thread_number(thread_number), m_max_requests(max_request), m_stop(false), m_threads(NULL){
     if((thread_number <= 0) || (max_request <= 0)){//先判断传入参数thread_number,max_request有没有违法
-        throw std::exception;
+        throw std::exception();
     }
     m_threads = new pthread_t[m_thread_number];//通过new创建的，不要忘记delete掉
     if(!m_threads){
@@ -135,7 +135,7 @@ void threadpool<T>::run(){//线程池需要一直运行，直到m_stop==false
             continue;
         }
 
-        request->porcess();//取出的任务 执行
+        request->process();//取出的任务 执行
     }
 }
 

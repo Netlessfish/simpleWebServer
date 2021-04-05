@@ -39,6 +39,10 @@ public:
     */
     enum CHECK_STATE { CHECK_STATE_REQUESTLINE = 0, CHECK_STATE_HEADER, CHECK_STATE_CONTENT };
     
+    // 从状态机的三种可能状态，即行的读取状态，分别表示
+    // 1.读取到一个完整的行 2.行出错 3.行数据尚且不完整
+    enum LINE_STATUS { LINE_OK = 0, LINE_BAD, LINE_OPEN };
+
     /*
         服务器处理HTTP请求的可能结果，报文解析的结果
         NO_REQUEST          :   请求不完整，需要继续读取客户数据
@@ -52,9 +56,7 @@ public:
     */
     enum HTTP_CODE { NO_REQUEST, GET_REQUEST, BAD_REQUEST, NO_RESOURCE, FORBIDDEN_REQUEST, FILE_REQUEST, INTERNAL_ERROR, CLOSED_CONNECTION };
     
-    // 从状态机的三种可能状态，即行的读取状态，分别表示
-    // 1.读取到一个完整的行 2.行出错 3.行数据尚且不完整
-    enum LINE_STATUS { LINE_OK = 0, LINE_BAD, LINE_OPEN };
+    
 public:
     http_conn(){}
     ~http_conn(){}
@@ -65,17 +67,18 @@ public:
     bool read();// 非阻塞的读
     bool write();// 非阻塞的写
 private:
-    void init();    // 初始化连接
+    void init();    // 初始化连接其余的数据
     HTTP_CODE process_read();    // 解析HTTP请求
     bool process_write( HTTP_CODE ret );    // 填充HTTP应答
 
     // 下面这一组函数被process_read调用以分析HTTP请求
-    HTTP_CODE parse_request_line( char* text );
-    HTTP_CODE parse_headers( char* text );
-    HTTP_CODE parse_content( char* text );
-    HTTP_CODE do_request();
-    char* get_line() { return m_read_buf + m_start_line; }
-    LINE_STATUS parse_line();
+    HTTP_CODE parse_request_line( char* text );//解析HTTP请求首行
+    HTTP_CODE parse_headers( char* text );//解析请求头
+    HTTP_CODE parse_content( char* text );//解析请求体
+    HTTP_CODE do_request();//去做一个具体的处理
+
+    char* get_line() { return m_read_buf + m_start_line; }//获取一行数据
+    LINE_STATUS parse_line();//从状态机，解析具体的某一行
 
     // 这一组函数被process_write调用以填充HTTP应答。
     void unmap();
@@ -93,8 +96,8 @@ public:
     static int m_user_count;    // 统计用户的数量
 
 private:
-    int m_sockfd;// 该HTTP连接的socket和对方的socket地址
-    sockaddr_in m_address;//通信的socket地址
+    int m_sockfd;                           // 该HTTP连接的socket和对方的socket地址
+    sockaddr_in m_address;                  //通信的socket地址
     
     char m_read_buf[ READ_BUFFER_SIZE ];    // 读缓冲区
     int m_read_idx;                         // 标识读缓冲区中已经读入的客户端数据的最后一个字节的下一个位置
@@ -111,9 +114,9 @@ private:
     int m_content_length;                   // HTTP请求的消息总长度
     bool m_linger;                          // HTTP请求是否要求保持连接
 
-    char m_write_buf[ WRITE_BUFFER_SIZE ];  // 写缓冲区
+    char m_write_buf[ WRITE_BUFFER_SIZE ];  // 写缓冲区（请求体）
     int m_write_idx;                        // 写缓冲区中待发送的字节数
-    char* m_file_address;                   // 客户请求的目标文件被mmap到内存中的起始位置
+    char* m_file_address;                   // 客户请求的目标文件（资源）被mmap到内存中的起始位置
     struct stat m_file_stat;                // 目标文件的状态。通过它我们可以判断文件是否存在、是否为目录、是否可读，并获取文件大小等信息
     struct iovec m_iv[2];                   // 我们将采用writev来执行写操作，所以定义下面两个成员，其中m_iv_count表示被写内存块的数量。
     int m_iv_count;

@@ -38,7 +38,7 @@ extern void addfd(int epollfd, int fd, bool one_shot);
 extern void removefd(int epollfd, int fd);
 
 //修改文件描述符
-extern void modfd(int epollfd, int fd，int ev);
+//extern void modfd(int epollfd, int fd，int ev);
 
 int main(int arg, char * argv[]){
     if(arg <= 1){
@@ -139,8 +139,9 @@ int main(int arg, char * argv[]){
 然后利用线程池将任务追加到线程池中，
 线程池中run(),run()中从任务队列中取，取到一个后执行process()
 process中将读取的数据，解析，生成响应数据。
+响应有两块数据：一块是响应头和空行，一块是要请求的文件数据。用分散写的方法写两块数据。
 
-下一次，检测到EPOLLOUT时，就把响应数据写出去
+下一次，当epollfd检测到可以写的时候，检测到EPOLLOUT时，就把响应数据写出去,调用write()
 */
             } else if(events[i].events & EPOLLIN) { //判断有读的事件发生
 
