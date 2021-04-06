@@ -1,36 +1,48 @@
 # simpleServerWeb
 
 #### 介绍
-version0.0 
-#### 软件架构
-软件架构说明
+> version0.0 学习版本，是基于游双的《linux高性能服务器编程》，将定时器合并入原代码中
 
+version1.0 基于Reactor模式的simpleWebServer
 
-#### 安装教程
-
-1.  xxxx
-2.  xxxx
-3.  xxxx
+test_pressure 压力测试工具
 
 #### 使用说明
+1. 克隆到本地
+2. 编译
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+```
+cd simpleServerWeb/version1.0
+g++ *.cpp -o simpleServerWeb -pthread
+./simpleServerWeb
+```
+3. 打开地址栏输入
 
-#### 参与贡献
+```
+127.0.0.1：8888
+```
 
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
+#### 软件架构
+
+##### 软件架构说明
+
+待补充。。。
 
 
-#### 特技
+#### 特性
 
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  Gitee 官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解 Gitee 上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
-5.  Gitee 官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+1. 使用Epoll边沿触发的IO多路复用技术，非阻塞IO，使用Reactor模式
+2. 使用多线程充分利用多核CPU，并使用线程池避免线程频繁创建销毁的开销
+3. 利用状态机思想解析Http报文，支持GET/POST请求，支持长/短连接
+4. 使用基于小根堆的定时器关闭超时请求 解决超时;连接系统资源占用问题
+
+#### 压力测试
+
+```
+./webbench -t 30 -c 1000 -2 --get http://127.0.0.1:8888/
+```
+测试了并发1000个get请求，压测30s,长连接
+
+结果如下：
+
+待补充。。。
